@@ -1,0 +1,1177 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.min.css" integrity="sha512-43fHB3GLgZfz8QXl1RPQ8O66oIgv3po9cJ5erMt1c4QISq9dYb195T3vr5ImnJPXuVroKcGBPXBFKETW8jrPNQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js" integrity="sha512-jeF9CfnvzDiw9G9xiksVjxR2lib44Gnovvkv+3CgCG6NXCD4gqlA5nDAVW5WjpA+i+/zKsUWV5xNEbW1X/HH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 900px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 100%;
+                 height: 900px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="india">india</option>
+                                
+                                    <option value="health indicators">health indicators</option>
+                                
+                                    <option value="population">population</option>
+                                
+                                    <option value="active health workers density">active health workers density</option>
+                                
+                                    <option value="paucity of skilled personnel">paucity of skilled personnel</option>
+                                
+                                    <option value="universal health coverage">universal health coverage</option>
+                                
+                                    <option value="sustainable development goals">sustainable development goals</option>
+                                
+                                    <option value="health system">health system</option>
+                                
+                                    <option value="health sector reform">health sector reform</option>
+                                
+                                    <option value="sustainable development goals(sdgs)">sustainable development goals(sdgs)</option>
+                                
+                                    <option value="sector">sector</option>
+                                
+                                    <option value="opportunity">opportunity</option>
+                                
+                                    <option value="human resource challenges">human resource challenges</option>
+                                
+                                    <option value="healthcare">healthcare</option>
+                                
+                                    <option value="medical tourism">medical tourism</option>
+                                
+                                    <option value="third most popular destination">third most popular destination</option>
+                                
+                                    <option value="highest number per population">highest number per population</option>
+                                
+                                    <option value="government healthcare system">government healthcare system</option>
+                                
+                                    <option value="technology">technology</option>
+                                
+                                    <option value="high-income countries">high-income countries</option>
+                                
+                                    <option value="digital divide">digital divide</option>
+                                
+                                    <option value="telemedicine">telemedicine</option>
+                                
+                                    <option value="diabetes capital of the world">diabetes capital of the world</option>
+                                
+                                    <option value="live register for health personnel and infrastructure">live register for health personnel and infrastructure</option>
+                                
+                                    <option value="exact number or geospatial details about its practicing doctors">exact number or geospatial details about its practicing doctors</option>
+                                
+                                    <option value="doctors">doctors</option>
+                                
+                                    <option value="nurses/midwives">nurses/midwives</option>
+                                
+                                    <option value="who threshold">who threshold</option>
+                                
+                                    <option value="issue">issue</option>
+                                
+                                    <option value="skewed inter-state, urban-rural, and public-private sector divide">skewed inter-state, urban-rural, and public-private sector divide</option>
+                                
+                                    <option value="calls">calls</option>
+                                
+                                    <option value="skilled health workforce">skilled health workforce</option>
+                                
+                                    <option value="human resources">human resources</option>
+                                
+                                    <option value="complex multifactorial issue">complex multifactorial issue</option>
+                                
+                                    <option value="sustainable development goals (sdgs)">sustainable development goals (sdgs)</option>
+                                
+                                    <option value="federal health budget">federal health budget</option>
+                                
+                                    <option value="recent increase">recent increase</option>
+                                
+                                    <option value="materials">materials</option>
+                                
+                                    <option value="data">data</option>
+                                
+                                    <option value="public health sector systems">public health sector systems</option>
+                                
+                                    <option value="private health sector systems">private health sector systems</option>
+                                
+                                    <option value="medical tourism industry">medical tourism industry</option>
+                                
+                                    <option value="medical schools">medical schools</option>
+                                
+                                    <option value="national medical council">national medical council</option>
+                                
+                                    <option value="policies">policies</option>
+                                
+                                    <option value="opportunities">opportunities</option>
+                                
+                                    <option value="working conditions">working conditions</option>
+                                
+                                    <option value="indian public health standards">indian public health standards</option>
+                                
+                                    <option value="public sector">public sector</option>
+                                
+                                    <option value="national-level policies">national-level policies</option>
+                                
+                                    <option value="auxiliary nurse midwives">auxiliary nurse midwives</option>
+                                
+                                    <option value="human resource">human resource</option>
+                                
+                                    <option value="public and private sectors">public and private sectors</option>
+                                
+                                    <option value="growing divide">growing divide</option>
+                                
+                                    <option value="private sectors">private sectors</option>
+                                
+                                    <option value="divergent strategies">divergent strategies</option>
+                                
+                                    <option value="burgeoning number of medical schools">burgeoning number of medical schools</option>
+                                
+                                    <option value="paucity of quality health personnel">paucity of quality health personnel</option>
+                                
+                                    <option value="recommendations">recommendations</option>
+                                
+                                    <option value="transparent governance">transparent governance</option>
+                                
+                                    <option value="health infrastructure">health infrastructure</option>
+                                
+                                    <option value="existing workforce">existing workforce</option>
+                                
+                                    <option value="upskilling">upskilling</option>
+                                
+                                    <option value="private sector">private sector</option>
+                                
+                                    <option value="methodology">methodology</option>
+                                
+                                    <option value="read approach">read approach</option>
+                                
+                                    <option value="literature search">literature search</option>
+                                
+                                    <option value="56 articles">56 articles</option>
+                                
+                                    <option value="corresponding authors' experiential knowledge">corresponding authors' experiential knowledge</option>
+                                
+                                    <option value="foundation">foundation</option>
+                                
+                                    <option value="public and private health sectors">public and private health sectors</option>
+                                
+                                    <option value="underfunded">underfunded</option>
+                                
+                                    <option value="1.28% of the gdp">1.28% of the gdp</option>
+                                
+                                    <option value="provider">provider</option>
+                                
+                                    <option value="hospital beds">hospital beds</option>
+                                
+                                    <option value="physicians">physicians</option>
+                                
+                                    <option value="health insurance">health insurance</option>
+                                
+                                    <option value="private health sector">private health sector</option>
+                                
+                                    <option value="gdp">gdp</option>
+                                
+                                    <option value="out-of-pocket expenditure">out-of-pocket expenditure</option>
+                                
+                                    <option value="health facilities">health facilities</option>
+                                
+                                    <option value="narayana health">narayana health</option>
+                                
+                                    <option value="informal provider clinics">informal provider clinics</option>
+                                
+                                    <option value="open access review article">open access review article</option>
+                                
+                                    <option value="doi: 10.7759/cureus.40274">doi: 10.7759/cureus.40274</option>
+                                
+                                    <option value="doi10.7759/cureus.40274">doi10.7759/cureus.40274</option>
+                                
+                                    <option value="how to cite this article">how to cite this article</option>
+                                
+                                    <option value="saxena s g, godfrey t (june 11, 2023)">saxena s g, godfrey t (june 11, 2023)</option>
+                                
+                                    <option value="cureus">cureus</option>
+                                
+                                    <option value="15(6)">15(6)</option>
+                                
+                                    <option value="e40274">e40274</option>
+                                
+                                    <option value="2023">2023</option>
+                                
+                                    <option value="2023 saxena">2023 saxena</option>
+                                
+                                    <option value="doi">doi</option>
+                                
+                                    <option value="informal providers">informal providers</option>
+                                
+                                    <option value="urban slums and rural areas">urban slums and rural areas</option>
+                                
+                                    <option value="first choice of care">first choice of care</option>
+                                
+                                    <option value="trusted constant presence">trusted constant presence</option>
+                                
+                                    <option value="social, economic, and cultural norms">social, economic, and cultural norms</option>
+                                
+                                    <option value="public health sector (nhm)">public health sector (nhm)</option>
+                                
+                                    <option value="health challenges">health challenges</option>
+                                
+                                    <option value="communitization">communitization</option>
+                                
+                                    <option value="flexible financing">flexible financing</option>
+                                
+                                    <option value="improved management">improved management</option>
+                                
+                                    <option value="monitoring progress">monitoring progress</option>
+                                
+                                    <option value="innovations in human resource management">innovations in human resource management</option>
+                                
+                                    <option value="female community health workers">female community health workers</option>
+                                
+                                    <option value="accredited social health activists (asha)">accredited social health activists (asha)</option>
+                                
+                                    <option value="increase the reach">increase the reach</option>
+                                
+                                    <option value="auxiliary nurse midwives (anm)">auxiliary nurse midwives (anm)</option>
+                                
+                                    <option value="reality, serve up to 20,000 people">reality, serve up to 20,000 people</option>
+                                
+                                    <option value="anms">anms</option>
+                                
+                                    <option value="training">training</option>
+                                
+                                    <option value="government employees">government employees</option>
+                                
+                                    <option value="ashas">ashas</option>
+                                
+                                    <option value="private contractors">private contractors</option>
+                                
+                                    <option value="work performed">work performed</option>
+                                
+                                    <option value="contractors">contractors</option>
+                                
+                                    <option value="synthesis">synthesis</option>
+                                
+                                    <option value="evaluation of ashas">evaluation of ashas</option>
+                                
+                                    <option value="new cadres">new cadres</option>
+                                
+                                    <option value="government">government</option>
+                                
+                                    <option value="rural medical assistants (rmas)">rural medical assistants (rmas)</option>
+                                
+                                    <option value="physician assistant program">physician assistant program</option>
+                                
+                                    <option value="rmas">rmas</option>
+                                
+                                    <option value="primary health centers">primary health centers</option>
+                                
+                                    <option value="paramedical councils">paramedical councils</option>
+                                
+                                    <option value="supportive care">supportive care</option>
+                                
+                                    <option value="doctors and nurses">doctors and nurses</option>
+                                
+                                    <option value="contractual basis">contractual basis</option>
+                                
+                                    <option value="nhm">nhm</option>
+                                
+                                    <option value="contractual personnel">contractual personnel</option>
+                                
+                                    <option value="rural areas">rural areas</option>
+                                
+                                    <option value="system failings">system failings</option>
+                                
+                                    <option value="ophthalmic fundal examination">ophthalmic fundal examination</option>
+                                
+                                    <option value="indian systems of medicine">indian systems of medicine</option>
+                                
+                                    <option value="allopathic medicine">allopathic medicine</option>
+                                
+                                    <option value="retention rates">retention rates</option>
+                                
+                                    <option value="personnel">personnel</option>
+                                
+                                    <option value="contractual employees">contractual employees</option>
+                                
+                                    <option value="regular counterparts">regular counterparts</option>
+                                
+                                    <option value="infrastructure and supply chain issues">infrastructure and supply chain issues</option>
+                                
+                                    <option value="all employees">all employees</option>
+                                
+                                    <option value="violence by communities against doctors">violence by communities against doctors</option>
+                                
+                                    <option value="covid-19 pandemic">covid-19 pandemic</option>
+                                
+                                    <option value="indian-born physicians">indian-born physicians</option>
+                                
+                                    <option value="physicians trained in india">physicians trained in india</option>
+                                
+                                    <option value="�migr� physician workforce">�migr� physician workforce</option>
+                                
+                                    <option value="ayushman bharat">ayushman bharat</option>
+                                
+                                    <option value="health insurance scheme">health insurance scheme</option>
+                                
+                                    <option value="primary care">primary care</option>
+                                
+                                    <option value="health and wellness centers">health and wellness centers</option>
+                                
+                                    <option value="secondary and tertiary care services">secondary and tertiary care services</option>
+                                
+                                    <option value="participating private health facilities">participating private health facilities</option>
+                                
+                                    <option value="secondary and tertiary care">secondary and tertiary care</option>
+                                
+                                    <option value="private health facilities">private health facilities</option>
+                                
+                                    <option value="scheme">scheme</option>
+                                
+                                    <option value="potential">potential</option>
+                                
+                                    <option value="stewardship">stewardship</option>
+                                
+                                    <option value="governance">governance</option>
+                                
+                                    <option value="quality control">quality control</option>
+                                
+                                    <option value="india's progress">india's progress</option>
+                                
+                                    <option value="sdg goals">sdg goals</option>
+                                
+                                    <option value="performance evaluation">performance evaluation</option>
+                                
+                                    <option value="access">access</option>
+                                
+                                    <option value="financial protection">financial protection</option>
+                                
+                                    <option value="schemes">schemes</option>
+                                
+                                    <option value="various states">various states</option>
+                                
+                                    <option value="results">results</option>
+                                
+                                    <option value="mixed">mixed</option>
+                                
+                                    <option value="publicly funded purchasing">publicly funded purchasing</option>
+                                
+                                    <option value="services">services</option>
+                                
+                                    <option value="private providers">private providers</option>
+                                
+                                    <option value="unmet demand">unmet demand</option>
+                                
+                                    <option value="unregulated">unregulated</option>
+                                
+                                    <option value="cognitive platform">cognitive platform</option>
+                                
+                                    <option value="public health sector">public health sector</option>
+                                
+                                    <option value="preferred provider">preferred provider</option>
+                                
+                                    <option value="care">care</option>
+                                
+                                    <option value="patients">patients</option>
+                                
+                                    <option value="economically weaker off sections of society">economically weaker off sections of society</option>
+                                
+                                    <option value="costs">costs</option>
+                                
+                                    <option value="trend">trend</option>
+                                
+                                    <option value="medicalization">medicalization</option>
+                                
+                                    <option value="corporatization">corporatization</option>
+                                
+                                    <option value="solo practitioners">solo practitioners</option>
+                                
+                                    <option value="small nursing homes">small nursing homes</option>
+                                
+                                    <option value="corporate houses">corporate houses</option>
+                                
+                                    <option value="urban areas">urban areas</option>
+                                
+                                    <option value="tier ii and iii cities">tier ii and iii cities</option>
+                                
+                                    <option value="setting up medical colleges">setting up medical colleges</option>
+                                
+                                    <option value="government colleges">government colleges</option>
+                                
+                                    <option value="doctors in india">doctors in india</option>
+                                
+                                    <option value="mandatory advance payments">mandatory advance payments</option>
+                                
+                                    <option value="oop expenditure">oop expenditure</option>
+                                
+                                    <option value="total health">total health</option>
+                                
+                                    <option value="total health expenditure">total health expenditure</option>
+                                
+                                    <option value="rapidly expanding">rapidly expanding</option>
+                                
+                                    <option value="marked spike">marked spike</option>
+                                
+                                    <option value="increased oop expenditure">increased oop expenditure</option>
+                                
+                                    <option value="saxena et al.">saxena et al.</option>
+                                
+                                    <option value="saxena">saxena</option>
+                                
+                                    <option value="10.7759/cureus.40274">10.7759/cureus.40274</option>
+                                
+                                    <option value="10.7759/cureus.402743">10.7759/cureus.402743</option>
+                                
+                                    <option value="doctors graduating from private colleges">doctors graduating from private colleges</option>
+                                
+                                    <option value="contractual government posts">contractual government posts</option>
+                                
+                                    <option value="corporate sector">corporate sector</option>
+                                
+                                    <option value="doctors' professional autonomy">doctors' professional autonomy</option>
+                                
+                                    <option value="young and early career doctors">young and early career doctors</option>
+                                
+                                    <option value="erosion of their status and opportunity">erosion of their status and opportunity</option>
+                                
+                                    <option value="national medical council (nmc)">national medical council (nmc)</option>
+                                
+                                    <option value="regulation of health professionals">regulation of health professionals</option>
+                                
+                                    <option value="nmc act">nmc act</option>
+                                
+                                    <option value="private corporate sector, pharmaceutical industries, medical education, and healthcare services">private corporate sector, pharmaceutical industries, medical education, and healthcare services</option>
+                                
+                                    <option value="medical education">medical education</option>
+                                
+                                    <option value="health coverage">health coverage</option>
+                                
+                                    <option value="centralizing control of medical education">centralizing control of medical education</option>
+                                
+                                    <option value="states">states</option>
+                                
+                                    <option value="geographical">geographical</option>
+                                
+                                    <option value="cultural">cultural</option>
+                                
+                                    <option value="social">social</option>
+                                
+                                    <option value="economic diversity">economic diversity</option>
+                                
+                                    <option value="expenditure on health in india">expenditure on health in india</option>
+                                
+                                    <option value="us">us</option>
+                                
+                                    <option value="government of india">government of india</option>
+                                
+                                    <option value="national health policy 2017">national health policy 2017</option>
+                                
+                                    <option value="allocation">allocation</option>
+                                
+                                    <option value="2025">2025</option>
+                                
+                                    <option value="domestic general government health expenditure">domestic general government health expenditure</option>
+                                
+                                    <option value="us 8.6%">us 8.6%</option>
+                                
+                                    <option value="brazil 4%">brazil 4%</option>
+                                
+                                    <option value="china's 2.9%">china's 2.9%</option>
+                                
+                                    <option value="indian government">indian government</option>
+                                
+                                    <option value="oop expenditures">oop expenditures</option>
+                                
+                                    <option value="consumers">consumers</option>
+                                
+                                    <option value="poverty">poverty</option>
+                                
+                                    <option value="expenditure">expenditure</option>
+                                
+                                    <option value="efficiency">efficiency</option>
+                                
+                                    <option value="public health system">public health system</option>
+                                
+                                    <option value="federal government's allocation">federal government's allocation</option>
+                                
+                                    <option value="2022">2022</option>
+                                
+                                    <option value="capacity">capacity</option>
+                                
+                                    <option value="federal government">federal government</option>
+                                
+                                    <option value="workforce capability">workforce capability</option>
+                                
+                                    <option value="institutional capacity building">institutional capacity building</option>
+                                
+                                    <option value="competency-based training">competency-based training</option>
+                                
+                                    <option value="country">country</option>
+                                
+                                    <option value="national health protection mission">national health protection mission</option>
+                                
+                                    <option value="uptake">uptake</option>
+                                
+                                    <option value="indians">indians</option>
+                                
+                                    <option value="standards">standards</option>
+                                
+                                    <option value="synergize services">synergize services</option>
+                                
+                                    <option value="standardization">standardization</option>
+                                
+                                    <option value="corporate hospitals">corporate hospitals</option>
+                                
+                                    <option value="land">land</option>
+                                
+                                    <option value="limited rules">limited rules</option>
+                                
+                                    <option value="enforced">enforced</option>
+                                
+                                    <option value="state-of-the-art corporate hospitals">state-of-the-art corporate hospitals</option>
+                                
+                                    <option value="allocated land">allocated land</option>
+                                
+                                    <option value="rules">rules</option>
+                                
+                                    <option value="market-driven forces">market-driven forces</option>
+                                
+                                    <option value="profit margins">profit margins</option>
+                                
+                                    <option value="hospitals">hospitals</option>
+                                
+                                    <option value="central government employees">central government employees</option>
+                                
+                                    <option value="model">model</option>
+                                
+                                    <option value="national health insurance scheme">national health insurance scheme</option>
+                                
+                                    <option value="digital technology">digital technology</option>
+                                
+                                    <option value="vaccination program">vaccination program</option>
+                                
+                                    <option value="track and trace system">track and trace system</option>
+                                
+                                    <option value="evin">evin</option>
+                                
+                                    <option value="training management information systems">training management information systems</option>
+                                
+                                    <option value="new personnel">new personnel</option>
+                                
+                                    <option value="policy formulation">policy formulation</option>
+                                
+                                    <option value="medical devices">medical devices</option>
+                                
+                                    <option value="mobile health apps">mobile health apps</option>
+                                
+                                    <option value="wearable, trackable technology">wearable, trackable technology</option>
+                                
+                                    <option value="pace and scale of this process">pace and scale of this process</option>
+                                
+                                    <option value="delivery of healthcare">delivery of healthcare</option>
+                                
+                                    <option value="populations">populations</option>
+                                
+                                    <option value="consultations">consultations</option>
+                                
+                                    <option value="reach of care">reach of care</option>
+                                
+                                    <option value="decrease maternal and child mortality">decrease maternal and child mortality</option>
+                                
+                                    <option value="medical examination">medical examination</option>
+                                
+                                    <option value="procedures">procedures</option>
+                                
+                                    <option value="ai-embedded logarithms">ai-embedded logarithms</option>
+                                
+                                    <option value="covid-19 disease">covid-19 disease</option>
+                                
+                                    <option value="remote orthopedic examinations">remote orthopedic examinations</option>
+                                
+                                    <option value="drones">drones</option>
+                                
+                                    <option value="medicines">medicines</option>
+                                
+                                    <option value="protective equipment">protective equipment</option>
+                                
+                                    <option value="manufacturing">manufacturing</option>
+                                
+                                    <option value="internet density">internet density</option>
+                                
+                                    <option value="digital technologies">digital technologies</option>
+                                
+                                    <option value="control of risk factors for non-communicable diseases">control of risk factors for non-communicable diseases</option>
+                                
+                                    <option value="digital literacy">digital literacy</option>
+                                
+                                    <option value="delivery and monitoring of care for the elderly">delivery and monitoring of care for the elderly</option>
+                                
+                                    <option value="privacy in accessing care for those with mental health issues">privacy in accessing care for those with mental health issues</option>
+                                
+                                    <option value="stigma associated with mental health">stigma associated with mental health</option>
+                                
+                                    <option value="central government">central government</option>
+                                
+                                    <option value="leadership in the fight for better health for all indians">leadership in the fight for better health for all indians</option>
+                                
+                                    <option value="quantity and geospatial location of its manpower">quantity and geospatial location of its manpower</option>
+                                
+                                    <option value="training schedules">training schedules</option>
+                                
+                                    <option value="erratic posting of personnel">erratic posting of personnel</option>
+                                
+                                    <option value="transparency">transparency</option>
+                                
+                                    <option value="retaining health personnel">retaining health personnel</option>
+                                
+                                    <option value="strengthening health infrastructure">strengthening health infrastructure</option>
+                                
+                                    <option value="implementing uniform standards">implementing uniform standards</option>
+                                
+                                    <option value="broad overarching policy">broad overarching policy</option>
+                                
+                                    <option value="district or state headquarters">district or state headquarters</option>
+                                
+                                    <option value="retention">retention</option>
+                                
+                                    <option value="living conditions">living conditions</option>
+                                
+                                    <option value="underserved regions">underserved regions</option>
+                                
+                                    <option value="online training">online training</option>
+                                
+                                    <option value="challenge">challenge</option>
+                                
+                                    <option value="investment">investment</option>
+                                
+                                    <option value="skills">skills</option>
+                                
+                                    <option value="evaluations">evaluations</option>
+                                
+                                    <option value="implementation">implementation</option>
+                                
+                                    <option value="faculty">faculty</option>
+                                
+                                    <option value="university of nottingham">university of nottingham</option>
+                                
+                                    <option value="violence">violence</option>
+                                
+                                    <option value="healthcare personnel">healthcare personnel</option>
+                                
+                                    <option value="physician-to-patient ratio">physician-to-patient ratio</option>
+                                
+                                    <option value="delays">delays</option>
+                                
+                                    <option value="patient overload">patient overload</option>
+                                
+                                    <option value="defensive medicine practices">defensive medicine practices</option>
+                                
+                                    <option value="overwhelmed">overwhelmed</option>
+                                
+                                    <option value="patient">patient</option>
+                                
+                                    <option value="physician">physician</option>
+                                
+                                    <option value="system">system</option>
+                                
+                                    <option value="pharmaceutical companies">pharmaceutical companies</option>
+                                
+                                    <option value="unethical practices">unethical practices</option>
+                                
+                                    <option value="providers">providers</option>
+                                
+                                    <option value="tempting providers">tempting providers</option>
+                                
+                                    <option value="primary care physicians">primary care physicians</option>
+                                
+                                    <option value="adequate compensation">adequate compensation</option>
+                                
+                                    <option value="private marketplace">private marketplace</option>
+                                
+                                    <option value="thoughtful approach to government planning">thoughtful approach to government planning</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"font": {"color": "#36454F"}, "group": 13, "id": "india", "label": "india", "shape": "dot", "size": 24}, {"font": {"color": "#36454F"}, "group": 13, "id": "health indicators", "label": "health indicators", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "population", "label": "population", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "active health workers density", "label": "active health workers density", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 13, "id": "paucity of skilled personnel", "label": "paucity of skilled personnel", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 13, "id": "universal health coverage", "label": "universal health coverage", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 13, "id": "sustainable development goals", "label": "sustainable development goals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "health system", "label": "health system", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "health sector reform", "label": "health sector reform", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "sustainable development goals(sdgs)", "label": "sustainable development goals(sdgs)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "sector", "label": "sector", "shape": "dot", "size": 13}, {"font": {"color": "#36454F"}, "group": 13, "id": "opportunity", "label": "opportunity", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "human resource challenges", "label": "human resource challenges", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "healthcare", "label": "healthcare", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 13, "id": "medical tourism", "label": "medical tourism", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "third most popular destination", "label": "third most popular destination", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "highest number per population", "label": "highest number per population", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "government healthcare system", "label": "government healthcare system", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "technology", "label": "technology", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "high-income countries", "label": "high-income countries", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 13, "id": "digital divide", "label": "digital divide", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "telemedicine", "label": "telemedicine", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 13, "id": "diabetes capital of the world", "label": "diabetes capital of the world", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "live register for health personnel and infrastructure", "label": "live register for health personnel and infrastructure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "exact number or geospatial details about its practicing doctors", "label": "exact number or geospatial details about its practicing doctors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "doctors", "label": "doctors", "shape": "dot", "size": 6}, {"font": {"color": "#36454F"}, "group": 1, "id": "nurses/midwives", "label": "nurses/midwives", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "who threshold", "label": "who threshold", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 53, "id": "issue", "label": "issue", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 53, "id": "skewed inter-state, urban-rural, and public-private sector divide", "label": "skewed inter-state, urban-rural, and public-private sector divide", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 16, "id": "calls", "label": "calls", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 16, "id": "skilled health workforce", "label": "skilled health workforce", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "human resources", "label": "human resources", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "complex multifactorial issue", "label": "complex multifactorial issue", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "sustainable development goals (sdgs)", "label": "sustainable development goals (sdgs)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "federal health budget", "label": "federal health budget", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "recent increase", "label": "recent increase", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 33, "id": "materials", "label": "materials", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 33, "id": "data", "label": "data", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 15, "id": "public health sector systems", "label": "public health sector systems", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 15, "id": "private health sector systems", "label": "private health sector systems", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 15, "id": "medical tourism industry", "label": "medical tourism industry", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 15, "id": "medical schools", "label": "medical schools", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "national medical council", "label": "national medical council", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "policies", "label": "policies", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "opportunities", "label": "opportunities", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 52, "id": "working conditions", "label": "working conditions", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 52, "id": "indian public health standards", "label": "indian public health standards", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 52, "id": "public sector", "label": "public sector", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 52, "id": "national-level policies", "label": "national-level policies", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 12, "id": "auxiliary nurse midwives", "label": "auxiliary nurse midwives", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 12, "id": "human resource", "label": "human resource", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 46, "id": "public and private sectors", "label": "public and private sectors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 46, "id": "growing divide", "label": "growing divide", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 15, "id": "private sectors", "label": "private sectors", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 15, "id": "divergent strategies", "label": "divergent strategies", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 15, "id": "burgeoning number of medical schools", "label": "burgeoning number of medical schools", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 68, "id": "paucity of quality health personnel", "label": "paucity of quality health personnel", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 68, "id": "recommendations", "label": "recommendations", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "transparent governance", "label": "transparent governance", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "health infrastructure", "label": "health infrastructure", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 27, "id": "existing workforce", "label": "existing workforce", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 27, "id": "upskilling", "label": "upskilling", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "private sector", "label": "private sector", "shape": "dot", "size": 10}, {"font": {"color": "#36454F"}, "group": 58, "id": "methodology", "label": "methodology", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 58, "id": "read approach", "label": "read approach", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 4, "id": "literature search", "label": "literature search", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 4, "id": "56 articles", "label": "56 articles", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 30, "id": "corresponding authors\u0027 experiential knowledge", "label": "corresponding authors\u0027 experiential knowledge", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 30, "id": "foundation", "label": "foundation", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "public and private health sectors", "label": "public and private health sectors", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "underfunded", "label": "underfunded", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "1.28% of the gdp", "label": "1.28% of the gdp", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "provider", "label": "provider", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "hospital beds", "label": "hospital beds", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "physicians", "label": "physicians", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 1, "id": "health insurance", "label": "health insurance", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "private health sector", "label": "private health sector", "shape": "dot", "size": 8}, {"font": {"color": "#36454F"}, "group": 3, "id": "gdp", "label": "gdp", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "out-of-pocket expenditure", "label": "out-of-pocket expenditure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "health facilities", "label": "health facilities", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "narayana health", "label": "narayana health", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "informal provider clinics", "label": "informal provider clinics", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 38, "id": "open access review article", "label": "open access review article", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 38, "id": "doi: 10.7759/cureus.40274", "label": "doi: 10.7759/cureus.40274", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 38, "id": "doi10.7759/cureus.40274", "label": "doi10.7759/cureus.40274", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 50, "id": "how to cite this article", "label": "how to cite this article", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 50, "id": "saxena s g, godfrey t (june 11, 2023)", "label": "saxena s g, godfrey t (june 11, 2023)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "cureus", "label": "cureus", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 2, "id": "15(6)", "label": "15(6)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "e40274", "label": "e40274", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 2, "id": "2023", "label": "2023", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 2, "id": "2023 saxena", "label": "2023 saxena", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "doi", "label": "doi", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 45, "id": "informal providers", "label": "informal providers", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 45, "id": "urban slums and rural areas", "label": "urban slums and rural areas", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 45, "id": "first choice of care", "label": "first choice of care", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 45, "id": "trusted constant presence", "label": "trusted constant presence", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 45, "id": "social, economic, and cultural norms", "label": "social, economic, and cultural norms", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "public health sector (nhm)", "label": "public health sector (nhm)", "shape": "dot", "size": 6}, {"font": {"color": "#36454F"}, "group": 19, "id": "health challenges", "label": "health challenges", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "communitization", "label": "communitization", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "flexible financing", "label": "flexible financing", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "improved management", "label": "improved management", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "monitoring progress", "label": "monitoring progress", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 19, "id": "innovations in human resource management", "label": "innovations in human resource management", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 6, "id": "female community health workers", "label": "female community health workers", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 6, "id": "accredited social health activists (asha)", "label": "accredited social health activists (asha)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 6, "id": "increase the reach", "label": "increase the reach", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "auxiliary nurse midwives (anm)", "label": "auxiliary nurse midwives (anm)", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "reality, serve up to 20,000 people", "label": "reality, serve up to 20,000 people", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "anms", "label": "anms", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 3, "id": "training", "label": "training", "shape": "dot", "size": 11}, {"font": {"color": "#36454F"}, "group": 3, "id": "government employees", "label": "government employees", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "ashas", "label": "ashas", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 3, "id": "private contractors", "label": "private contractors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "work performed", "label": "work performed", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "contractors", "label": "contractors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 42, "id": "synthesis", "label": "synthesis", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 42, "id": "evaluation of ashas", "label": "evaluation of ashas", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "new cadres", "label": "new cadres", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "government", "label": "government", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 70, "id": "rural medical assistants (rmas)", "label": "rural medical assistants (rmas)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 70, "id": "physician assistant program", "label": "physician assistant program", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 72, "id": "rmas", "label": "rmas", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 72, "id": "primary health centers", "label": "primary health centers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 66, "id": "paramedical councils", "label": "paramedical councils", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 66, "id": "supportive care", "label": "supportive care", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 21, "id": "doctors and nurses", "label": "doctors and nurses", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 21, "id": "contractual basis", "label": "contractual basis", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 24, "id": "nhm", "label": "nhm", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 24, "id": "contractual personnel", "label": "contractual personnel", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "rural areas", "label": "rural areas", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "system failings", "label": "system failings", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "ophthalmic fundal examination", "label": "ophthalmic fundal examination", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 11, "id": "indian systems of medicine", "label": "indian systems of medicine", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 11, "id": "allopathic medicine", "label": "allopathic medicine", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "retention rates", "label": "retention rates", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "personnel", "label": "personnel", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 22, "id": "contractual employees", "label": "contractual employees", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 22, "id": "regular counterparts", "label": "regular counterparts", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 9, "id": "infrastructure and supply chain issues", "label": "infrastructure and supply chain issues", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 9, "id": "all employees", "label": "all employees", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 32, "id": "violence by communities against doctors", "label": "violence by communities against doctors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 32, "id": "covid-19 pandemic", "label": "covid-19 pandemic", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 13, "id": "indian-born physicians", "label": "indian-born physicians", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 71, "id": "physicians trained in india", "label": "physicians trained in india", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 71, "id": "\u00e9migr\u00e9 physician workforce", "label": "\u00e9migr\u00e9 physician workforce", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 14, "id": "ayushman bharat", "label": "ayushman bharat", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 14, "id": "health insurance scheme", "label": "health insurance scheme", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 47, "id": "primary care", "label": "primary care", "shape": "dot", "size": 4}, {"font": {"color": "#36454F"}, "group": 47, "id": "health and wellness centers", "label": "health and wellness centers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 47, "id": "secondary and tertiary care services", "label": "secondary and tertiary care services", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 47, "id": "participating private health facilities", "label": "participating private health facilities", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 47, "id": "secondary and tertiary care", "label": "secondary and tertiary care", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 47, "id": "private health facilities", "label": "private health facilities", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "scheme", "label": "scheme", "shape": "dot", "size": 9}, {"font": {"color": "#36454F"}, "group": 5, "id": "potential", "label": "potential", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "stewardship", "label": "stewardship", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "governance", "label": "governance", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "quality control", "label": "quality control", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "india\u0027s progress", "label": "india\u0027s progress", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "sdg goals", "label": "sdg goals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "performance evaluation", "label": "performance evaluation", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "access", "label": "access", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 5, "id": "financial protection", "label": "financial protection", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 59, "id": "schemes", "label": "schemes", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 59, "id": "various states", "label": "various states", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 59, "id": "results", "label": "results", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 59, "id": "mixed", "label": "mixed", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 31, "id": "publicly funded purchasing", "label": "publicly funded purchasing", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 31, "id": "services", "label": "services", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 31, "id": "private providers", "label": "private providers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "unmet demand", "label": "unmet demand", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "unregulated", "label": "unregulated", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "cognitive platform", "label": "cognitive platform", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "public health sector", "label": "public health sector", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 13, "id": "preferred provider", "label": "preferred provider", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "care", "label": "care", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 31, "id": "patients", "label": "patients", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 31, "id": "economically weaker off sections of society", "label": "economically weaker off sections of society", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 31, "id": "costs", "label": "costs", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 29, "id": "trend", "label": "trend", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 29, "id": "medicalization", "label": "medicalization", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 29, "id": "corporatization", "label": "corporatization", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "solo practitioners", "label": "solo practitioners", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "small nursing homes", "label": "small nursing homes", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "corporate houses", "label": "corporate houses", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "urban areas", "label": "urban areas", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "tier ii and iii cities", "label": "tier ii and iii cities", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 27, "id": "setting up medical colleges", "label": "setting up medical colleges", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "government colleges", "label": "government colleges", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "doctors in india", "label": "doctors in india", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "mandatory advance payments", "label": "mandatory advance payments", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 65, "id": "oop expenditure", "label": "oop expenditure", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 65, "id": "total health", "label": "total health", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 65, "id": "total health expenditure", "label": "total health expenditure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 27, "id": "rapidly expanding", "label": "rapidly expanding", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 51, "id": "marked spike", "label": "marked spike", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 51, "id": "increased oop expenditure", "label": "increased oop expenditure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "saxena et al.", "label": "saxena et al.", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "saxena", "label": "saxena", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "10.7759/cureus.40274", "label": "10.7759/cureus.40274", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 2, "id": "10.7759/cureus.402743", "label": "10.7759/cureus.402743", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 23, "id": "doctors graduating from private colleges", "label": "doctors graduating from private colleges", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 23, "id": "contractual government posts", "label": "contractual government posts", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 28, "id": "corporate sector", "label": "corporate sector", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 28, "id": "doctors\u0027 professional autonomy", "label": "doctors\u0027 professional autonomy", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 41, "id": "young and early career doctors", "label": "young and early career doctors", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 41, "id": "erosion of their status and opportunity", "label": "erosion of their status and opportunity", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 62, "id": "national medical council (nmc)", "label": "national medical council (nmc)", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 62, "id": "regulation of health professionals", "label": "regulation of health professionals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 64, "id": "nmc act", "label": "nmc act", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 64, "id": "private corporate sector, pharmaceutical industries, medical education, and healthcare services", "label": "private corporate sector, pharmaceutical industries, medical education, and healthcare services", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "medical education", "label": "medical education", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 3, "id": "health coverage", "label": "health coverage", "shape": "dot", "size": 30}, {"font": {"color": "#36454F"}, "group": 3, "id": "centralizing control of medical education", "label": "centralizing control of medical education", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 3, "id": "states", "label": "states", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 3, "id": "geographical", "label": "geographical", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "cultural", "label": "cultural", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "social", "label": "social", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "economic diversity", "label": "economic diversity", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "expenditure on health in india", "label": "expenditure on health in india", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "us", "label": "us", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "government of india", "label": "government of india", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "national health policy 2017", "label": "national health policy 2017", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "allocation", "label": "allocation", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 3, "id": "2025", "label": "2025", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "domestic general government health expenditure", "label": "domestic general government health expenditure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "us 8.6%", "label": "us 8.6%", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "brazil 4%", "label": "brazil 4%", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "china\u0027s 2.9%", "label": "china\u0027s 2.9%", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "indian government", "label": "indian government", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "oop expenditures", "label": "oop expenditures", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "consumers", "label": "consumers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "poverty", "label": "poverty", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "expenditure", "label": "expenditure", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "efficiency", "label": "efficiency", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "public health system", "label": "public health system", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "federal government\u0027s allocation", "label": "federal government\u0027s allocation", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "2022", "label": "2022", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "capacity", "label": "capacity", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 3, "id": "federal government", "label": "federal government", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "workforce capability", "label": "workforce capability", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 20, "id": "institutional capacity building", "label": "institutional capacity building", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 20, "id": "competency-based training", "label": "competency-based training", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "country", "label": "country", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 61, "id": "national health protection mission", "label": "national health protection mission", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 61, "id": "uptake", "label": "uptake", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "indians", "label": "indians", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "standards", "label": "standards", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 1, "id": "synergize services", "label": "synergize services", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "standardization", "label": "standardization", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 26, "id": "corporate hospitals", "label": "corporate hospitals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 26, "id": "land", "label": "land", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 40, "id": "limited rules", "label": "limited rules", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 40, "id": "enforced", "label": "enforced", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 10, "id": "state-of-the-art corporate hospitals", "label": "state-of-the-art corporate hospitals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 10, "id": "allocated land", "label": "allocated land", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "rules", "label": "rules", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "market-driven forces", "label": "market-driven forces", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 49, "id": "profit margins", "label": "profit margins", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 49, "id": "hospitals", "label": "hospitals", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 14, "id": "central government employees", "label": "central government employees", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 60, "id": "model", "label": "model", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 60, "id": "national health insurance scheme", "label": "national health insurance scheme", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 37, "id": "digital technology", "label": "digital technology", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 37, "id": "vaccination program", "label": "vaccination program", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 43, "id": "track and trace system", "label": "track and trace system", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 43, "id": "evin", "label": "evin", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 63, "id": "training management information systems", "label": "training management information systems", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 63, "id": "new personnel", "label": "new personnel", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 56, "id": "policy formulation", "label": "policy formulation", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 56, "id": "medical devices", "label": "medical devices", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 56, "id": "mobile health apps", "label": "mobile health apps", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 56, "id": "wearable, trackable technology", "label": "wearable, trackable technology", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 32, "id": "pace and scale of this process", "label": "pace and scale of this process", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 36, "id": "delivery of healthcare", "label": "delivery of healthcare", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 36, "id": "populations", "label": "populations", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "consultations", "label": "consultations", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "reach of care", "label": "reach of care", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 13, "id": "decrease maternal and child mortality", "label": "decrease maternal and child mortality", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 57, "id": "medical examination", "label": "medical examination", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 57, "id": "procedures", "label": "procedures", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 8, "id": "ai-embedded logarithms", "label": "ai-embedded logarithms", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 8, "id": "covid-19 disease", "label": "covid-19 disease", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "remote orthopedic examinations", "label": "remote orthopedic examinations", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 39, "id": "drones", "label": "drones", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 39, "id": "medicines", "label": "medicines", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 55, "id": "protective equipment", "label": "protective equipment", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 55, "id": "manufacturing", "label": "manufacturing", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "internet density", "label": "internet density", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 25, "id": "digital technologies", "label": "digital technologies", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 25, "id": "control of risk factors for non-communicable diseases", "label": "control of risk factors for non-communicable diseases", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 35, "id": "digital literacy", "label": "digital literacy", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 35, "id": "delivery and monitoring of care for the elderly", "label": "delivery and monitoring of care for the elderly", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 35, "id": "privacy in accessing care for those with mental health issues", "label": "privacy in accessing care for those with mental health issues", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 35, "id": "stigma associated with mental health", "label": "stigma associated with mental health", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 17, "id": "central government", "label": "central government", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 17, "id": "leadership in the fight for better health for all indians", "label": "leadership in the fight for better health for all indians", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 33, "id": "quantity and geospatial location of its manpower", "label": "quantity and geospatial location of its manpower", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "training schedules", "label": "training schedules", "shape": "dot", "size": 3}, {"font": {"color": "#36454F"}, "group": 3, "id": "erratic posting of personnel", "label": "erratic posting of personnel", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "transparency", "label": "transparency", "shape": "dot", "size": 7}, {"font": {"color": "#36454F"}, "group": 3, "id": "retaining health personnel", "label": "retaining health personnel", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 3, "id": "strengthening health infrastructure", "label": "strengthening health infrastructure", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 3, "id": "implementing uniform standards", "label": "implementing uniform standards", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 3, "id": "broad overarching policy", "label": "broad overarching policy", "shape": "dot", "size": 5}, {"font": {"color": "#36454F"}, "group": 3, "id": "district or state headquarters", "label": "district or state headquarters", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "retention", "label": "retention", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 54, "id": "living conditions", "label": "living conditions", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 54, "id": "underserved regions", "label": "underserved regions", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 18, "id": "online training", "label": "online training", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 18, "id": "challenge", "label": "challenge", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "investment", "label": "investment", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "skills", "label": "skills", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "evaluations", "label": "evaluations", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 3, "id": "implementation", "label": "implementation", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 44, "id": "faculty", "label": "faculty", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 44, "id": "university of nottingham", "label": "university of nottingham", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 48, "id": "violence", "label": "violence", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 48, "id": "healthcare personnel", "label": "healthcare personnel", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 34, "id": "physician-to-patient ratio", "label": "physician-to-patient ratio", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 34, "id": "delays", "label": "delays", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "patient overload", "label": "patient overload", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "defensive medicine practices", "label": "defensive medicine practices", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 1, "id": "overwhelmed", "label": "overwhelmed", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 67, "id": "patient", "label": "patient", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 67, "id": "physician", "label": "physician", "shape": "dot", "size": 2}, {"font": {"color": "#36454F"}, "group": 67, "id": "system", "label": "system", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 69, "id": "pharmaceutical companies", "label": "pharmaceutical companies", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 69, "id": "unethical practices", "label": "unethical practices", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 74, "id": "providers", "label": "providers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 74, "id": "tempting providers", "label": "tempting providers", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 7, "id": "primary care physicians", "label": "primary care physicians", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 7, "id": "adequate compensation", "label": "adequate compensation", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 73, "id": "private marketplace", "label": "private marketplace", "shape": "dot", "size": 1}, {"font": {"color": "#36454F"}, "group": 73, "id": "thoughtful approach to government planning", "label": "thoughtful approach to government planning", "shape": "dot", "size": 1}]);
+                  edges = new vis.DataSet([{"from": "india", "title": "India\u0027s health indicators have improved in recent times but continue to lag behind those of its peer nations.", "to": "health indicators", "width": 1.0}, {"from": "india", "title": "The country with a population of 1.3 billion", "to": "population", "width": 1.0}, {"from": "india", "title": "has an estimated active health workers density of doctors and nurses/midwives of 5.0 and 6.0 respectively, for 10,000 persons", "to": "active health workers density", "width": 1.0}, {"from": "india", "title": "The paucity of skilled personnel must be addressed if India is to accelerate its progress toward achieving universal health coverage and its sustainable development goals (SDGs)", "to": "paucity of skilled personnel", "width": 1.0}, {"from": "india", "title": "India is working towards achieving universal health coverage", "to": "universal health coverage", "width": 1.0}, {"from": "india", "title": "India needs to accelerate its progress toward achieving its sustainable development goals", "to": "sustainable development goals", "width": 1.0}, {"from": "india", "title": "The authors analyze the health system in India", "to": "health system", "width": 1.0}, {"from": "india", "title": "Keywords: health sector reform, india", "to": "health sector reform", "width": 1.0}, {"from": "india", "title": "India is working towards achieving its sustainable development goals", "to": "sustainable development goals(sdgs)", "width": 1.0}, {"from": "india", "title": "sector contributes to healthcare in India", "to": "sector", "width": 1.0}, {"from": "india", "title": "has", "to": "opportunity", "width": 1.0}, {"from": "india", "title": "has", "to": "human resource challenges", "width": 1.0}, {"from": "india", "title": "has", "to": "healthcare", "width": 1.0}, {"from": "india", "title": "India has become a leading destination for medical tourism", "to": "medical tourism", "width": 1.0}, {"from": "india", "title": "making India the third most popular destination worldwide for medical tourism [9]", "to": "third most popular destination", "width": 1.0}, {"from": "india", "title": "India has the highest number per population in the world, as of May", "to": "highest number per population", "width": 1.0}, {"from": "india", "title": "India exhibits its diversity in its population and disease profiles", "to": "government healthcare system", "width": 1.0}, {"from": "india", "title": "expand such application of technology to other portfolios within the health sector", "to": "technology", "width": 1.0}, {"from": "india", "title": "has been done by the High-Income Countries, where innovations in digital technology are supporting the delivery of vital healthcare", "to": "high-income countries", "width": 1.0}, {"from": "india", "title": "India must close its digital divide if it is to take advantage of digital technology to aid the delivery of healthcare to the rural areas where it is needed the most", "to": "digital divide", "width": 1.0}, {"from": "india", "title": "Telemedicine can help decrease maternal and child mortality, which are among the highest in the world in India", "to": "telemedicine", "width": 1.0}, {"from": "india", "title": "India is already known as the diabetes capital of the world", "to": "diabetes capital of the world", "width": 1.0}, {"from": "india", "title": "India needs to have a live register for health personnel and infrastructure", "to": "live register for health personnel and infrastructure", "width": 1.0}, {"from": "india", "title": "India does not have data about the exact number or geospatial details about its practicing doctors", "to": "exact number or geospatial details about its practicing doctors", "width": 1.0}, {"from": "active health workers density", "title": "has an estimated active health workers density of doctors and nurses/midwives of 5.0 and 6.0 respectively, for 10,000 persons", "to": "doctors", "width": 1.0}, {"from": "active health workers density", "title": "has an estimated active health workers density of doctors and nurses/midwives of 5.0 and 6.0 respectively, for 10,000 persons", "to": "nurses/midwives", "width": 1.0}, {"from": "who threshold", "title": "which is much lower than the WHO threshold of 44.5 doctors, nurses, and midwives per 10,000 population", "to": "doctors", "width": 1.0}, {"from": "who threshold", "title": "which is much lower than the WHO threshold of 44.5 doctors, nurses, and midwives per 10,000 population", "to": "nurses/midwives", "width": 1.0}, {"from": "issue", "title": "The issue is compounded by the skewed inter-state, urban-rural, and public-private sector divide", "to": "skewed inter-state, urban-rural, and public-private sector divide", "width": 1.0}, {"from": "calls", "title": "Calls to urgently augment the skilled health workforce reinforce the central role human resources have in healthcare", "to": "skilled health workforce", "width": 1.0}, {"from": "human resources", "title": "Calls to urgently augment the skilled health workforce reinforce the central role human resources have in healthcare", "to": "healthcare", "width": 1.0}, {"from": "human resources", "title": "which has evolved into a complex multifactorial issue", "to": "complex multifactorial issue", "width": 1.0}, {"from": "paucity of skilled personnel", "title": "The paucity of skilled personnel must be addressed if India is to accelerate its progress toward achieving universal health coverage and its sustainable development goals (SDGs)", "to": "universal health coverage", "width": 1.0}, {"from": "paucity of skilled personnel", "title": "The paucity of skilled personnel must be addressed if India is to accelerate its progress toward achieving universal health coverage and its sustainable development goals (SDGs)", "to": "sustainable development goals (sdgs)", "width": 1.0}, {"from": "federal health budget", "title": "The recent increase in the federal health budget offers an unprecedented opportunity to accelerate progress toward achieving universal health coverage and sustainable development goals", "to": "opportunity", "width": 1.0}, {"from": "federal health budget", "title": "There has been a recent increase in the federal health budget", "to": "recent increase", "width": 1.0}, {"from": "materials", "title": "The article utilizes the ready materials to extract and analyze data", "to": "data", "width": 1.0}, {"from": "public health sector systems", "title": "The authors analyze the growing divide between the public and the burgeoning private health sector systems", "to": "private health sector systems", "width": 1.0}, {"from": "private health sector systems", "title": "The authors analyze the booming medical tourism industry in the private health sector systems", "to": "medical tourism industry", "width": 1.0}, {"from": "private health sector systems", "title": "The authors analyze the medical schools in the private health sector systems", "to": "medical schools", "width": 1.0}, {"from": "national medical council", "title": "The authors analyze the newly minted National Medical Council to recommend policies", "to": "policies", "width": 1.0}, {"from": "national medical council", "title": "There are opportunities available within the newly created National Medical Council", "to": "opportunities", "width": 1.0}, {"from": "working conditions", "title": "Keywords: working conditions, indian public health standards", "to": "indian public health standards", "width": 1.0}, {"from": "working conditions", "title": "Working conditions in the public sector remain demotivating.", "to": "public sector", "width": 1.0}, {"from": "working conditions", "title": "national and state-level policies, working conditions, and staff shortages", "to": "national-level policies", "width": 1.0}, {"from": "auxiliary nurse midwives", "title": "Keywords: auxiliary nurse midwives, human resource", "to": "human resource", "width": 1.0}, {"from": "public and private sectors", "title": "There is a growing divide between the public and private sectors", "to": "growing divide", "width": 1.0}, {"from": "private sectors", "title": "The private sector has divergent strategies compared to the public sector", "to": "divergent strategies", "width": 1.0}, {"from": "private sectors", "title": "The private sector has a booming medical tourism industry", "to": "medical tourism industry", "width": 1.0}, {"from": "private sectors", "title": "The private sector has a burgeoning number of medical schools", "to": "burgeoning number of medical schools", "width": 1.0}, {"from": "paucity of quality health personnel", "title": "The recommendations made to address the paucity of quality health personnel", "to": "recommendations", "width": 1.0}, {"from": "transparent governance", "title": "Transparent governance is important for strengthening the health infrastructure", "to": "health infrastructure", "width": 1.0}, {"from": "existing workforce", "title": "Upskilling the existing workforce is important", "to": "upskilling", "width": 1.0}, {"from": "existing workforce", "title": "Creating partnerships with the much larger private sector", "to": "private sector", "width": 1.0}, {"from": "methodology", "title": "The methodology used is the READ approach, which is a systematic approach for document analysis in health policy research", "to": "read approach", "width": 1.0}, {"from": "literature search", "title": "An extensive literature search was performed, and 56 articles were selected and analyzed", "to": "56 articles", "width": 1.0}, {"from": "corresponding authors\u0027 experiential knowledge", "title": "The corresponding authors\u0027 experiential knowledge served as the foundation for the analysis", "to": "foundation", "width": 1.0}, {"from": "public and private health sectors", "title": "The government-funded health sector has been chronically underfunded", "to": "underfunded", "width": 1.0}, {"from": "public and private health sectors", "title": "The government-funded health sector receives 1.28% of the GDP", "to": "1.28% of the gdp", "width": 1.0}, {"from": "sector", "title": "sector is the provider of healthcare to vulnerable populations", "to": "provider", "width": 1.0}, {"from": "sector", "title": "sector has been chronically underfunded with 1.28% of the GDP", "to": "underfunded", "width": 1.0}, {"from": "sector", "title": "sector is the provider of healthcare to vulnerable populations", "to": "healthcare", "width": 1.0}, {"from": "sector", "title": "sector contributes to the availability of public hospital beds", "to": "hospital beds", "width": 1.0}, {"from": "sector", "title": "sector contributes to the availability of physicians", "to": "physicians", "width": 1.0}, {"from": "sector", "title": "sector contributes to the lack of health insurance coverage", "to": "health insurance", "width": 1.0}, {"from": "sector", "title": "sector has contributed to the dominance of the for-profit private health sector", "to": "private health sector", "width": 1.0}, {"from": "sector", "title": "sector consumes 5.1% of the GDP", "to": "gdp", "width": 1.0}, {"from": "sector", "title": "sector is financed by Out-Of-Pocket expenditure", "to": "out-of-pocket expenditure", "width": 1.0}, {"from": "sector", "title": "sector includes world-class health facilities", "to": "health facilities", "width": 1.0}, {"from": "sector", "title": "sector includes Narayana Health, an internationally accredited, high quality, tertiary healthcare service provider", "to": "narayana health", "width": 1.0}, {"from": "sector", "title": "sector includes individual informal provider clinics", "to": "informal provider clinics", "width": 1.0}, {"from": "open access review article", "title": "is identified by", "to": "doi: 10.7759/cureus.40274", "width": 1.0}, {"from": "open access review article", "title": "cites", "to": "doi10.7759/cureus.40274", "width": 1.0}, {"from": "how to cite this article", "title": "is related to", "to": "saxena s g, godfrey t (june 11, 2023)", "width": 1.0}, {"from": "human resource challenges", "title": "is addressed by", "to": "healthcare", "width": 1.0}, {"from": "cureus", "title": "15(6) refers to the volume and issue number of the Cureus journal", "to": "15(6)", "width": 1.0}, {"from": "cureus", "title": "e40274 is a unique identifier for the specific article in the Cureus journal", "to": "e40274", "width": 1.0}, {"from": "cureus", "title": "Journal name", "to": "2023", "width": 1.0}, {"from": "cureus", "title": "Cureus is a journal mentioned in the context and 2023 Saxena is the author(s) or year of publication", "to": "2023 saxena", "width": 1.0}, {"from": "cureus", "title": "DOI stands for Digital Object Identifier, which is a unique identifier for the article in the Cureus journal", "to": "doi", "width": 1.0}, {"from": "informal providers", "title": "Informal providers are concentrated in urban slums and rural areas", "to": "urban slums and rural areas", "width": 1.0}, {"from": "informal providers", "title": "Informal providers are the first choice of care in their communities", "to": "first choice of care", "width": 1.0}, {"from": "informal providers", "title": "Informal providers have built a long-standing trusted constant presence in their communities", "to": "trusted constant presence", "width": 1.0}, {"from": "informal providers", "title": "Informal providers have adapted to their social, economic, and cultural norms", "to": "social, economic, and cultural norms", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM seeks to address health challenges", "to": "health challenges", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM uses communitization as an approach to address health challenges", "to": "communitization", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM uses flexible financing as an approach to address health challenges", "to": "flexible financing", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM aims to improve management through capacity building", "to": "improved management", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM aims to monitor progress against standards", "to": "monitoring progress", "width": 1.0}, {"from": "public health sector (nhm)", "title": "NHM aims to implement innovations in human resource management", "to": "innovations in human resource management", "width": 1.0}, {"from": "female community health workers", "title": "ASHAs serve as female community health workers", "to": "accredited social health activists (asha)", "width": 1.0}, {"from": "female community health workers", "title": "ASHAs serve to increase the reach of Auxiliary Nurse Midwives (ANM)", "to": "increase the reach", "width": 1.0}, {"from": "auxiliary nurse midwives (anm)", "title": "ANMs were meant to serve a population of 5,000", "to": "population", "width": 1.0}, {"from": "auxiliary nurse midwives (anm)", "title": "In reality, ANMs serve up to 20,000 people", "to": "reality, serve up to 20,000 people", "width": 1.0}, {"from": "anms", "title": "ANMs receive 18 months of training", "to": "training", "width": 1.0}, {"from": "anms", "title": "ANMs are government employees", "to": "government employees", "width": 1.0}, {"from": "ashas", "title": "ASHAs receive 23 days\u0027 initial training with additional on-the-job need-based short training", "to": "training", "width": 1.0}, {"from": "ashas", "title": "ASHAs are treated as private contractors", "to": "private contractors", "width": 1.0}, {"from": "ashas", "title": "ASHAs receive a payment proportionate to the amount of work performed", "to": "work performed", "width": 1.0}, {"from": "ashas", "title": "While ASHAs remain contractors", "to": "contractors", "width": 1.0}, {"from": "synthesis", "title": "recent synthesis of the evaluation of ASHAs from a health systems perspective shows broader system constraints and few overall positive findings", "to": "evaluation of ashas", "width": 1.0}, {"from": "new cadres", "title": "new cadres are being hired by the government on a contractual basis", "to": "government", "width": 1.0}, {"from": "rural medical assistants (rmas)", "title": "The RMA is a three-year diploma course similar to the physician assistant program in the US", "to": "physician assistant program", "width": 1.0}, {"from": "rmas", "title": "The RMAs work at Primary Health Centers and initial evaluation is positive", "to": "primary health centers", "width": 1.0}, {"from": "paramedical councils", "title": "paramedical councils have a number of courses to train personnel for the provision of supportive care in health facilities and homes", "to": "supportive care", "width": 1.0}, {"from": "doctors and nurses", "title": "doctors and nurses are being hired on a contractual basis", "to": "contractual basis", "width": 1.0}, {"from": "nhm", "title": "Since the inception of the NHM in 2005, 275,000 contractual personnel have been inducted into the workforce", "to": "contractual personnel", "width": 1.0}, {"from": "doctors", "title": "Doctors trained in Indian systems of medicine such as Ayurveda, Siddha, and Unani (AYUSH) are trained in bridge courses in allopathic", "to": "rural areas", "width": 1.0}, {"from": "doctors", "title": "Such system failings demotivate doctors and encourage them to seek other opportunities.", "to": "system failings", "width": 1.0}, {"from": "doctors", "title": "Majority of doctors (65%) work in the private health sector.", "to": "private health sector", "width": 1.0}, {"from": "doctors", "title": "Doctors can now perform an ophthalmic fundal examination online", "to": "ophthalmic fundal examination", "width": 1.0}, {"from": "indian systems of medicine", "title": "Doctors trained in Indian systems of medicine such as Ayurveda, Siddha, and Unani (AYUSH) are trained in bridge courses in allopathic medicine.", "to": "allopathic medicine", "width": 1.0}, {"from": "retention rates", "title": "Low retention rates of these personnel and dissatisfaction levels remaining high.", "to": "personnel", "width": 1.0}, {"from": "contractual employees", "title": "Contractual employees have lower remuneration as compared to their regular counterparts, salary payments are delayed, and the temporary nature of contracts remains a cause of concern.", "to": "regular counterparts", "width": 1.0}, {"from": "infrastructure and supply chain issues", "title": "Poor infrastructure and supply chain issues demotivate all employees.", "to": "all employees", "width": 1.0}, {"from": "violence by communities against doctors", "title": "Increasing incidents of violence by communities against doctors, especially during the COVID-19 pandemic.", "to": "covid-19 pandemic", "width": 1.0}, {"from": "indian-born physicians", "title": "More than 60,000 Indian-born physicians now practicing in high-income countries.", "to": "high-income countries", "width": 1.0}, {"from": "physicians trained in india", "title": "About 10% of the physicians trained in India have left the country, making it the largest \u00e9migr\u00e9 physician workforce in the world.", "to": "\u00e9migr\u00e9 physician workforce", "width": 1.0}, {"from": "ayushman bharat", "title": "Ayushman Bharat is a publicly financed health insurance scheme for the poor.", "to": "health insurance scheme", "width": 1.0}, {"from": "primary care", "title": "mentioned in the same sentence", "to": "health and wellness centers", "width": 1.0}, {"from": "primary care", "title": "mentioned in the same sentence", "to": "secondary and tertiary care services", "width": 1.0}, {"from": "primary care", "title": "mentioned in the same sentence", "to": "participating private health facilities", "width": 1.0}, {"from": "primary care", "title": "mentioned in the same sentence", "to": "secondary and tertiary care", "width": 1.0}, {"from": "secondary and tertiary care services", "title": "Ayushman Bharat allows the poor to avail secondary and tertiary care services from participating private health facilities.", "to": "private health facilities", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "potential", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "stewardship", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "governance", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "quality control", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "india\u0027s progress", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "sdg goals", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "performance evaluation", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "access", "width": 1.0}, {"from": "scheme", "title": "mentioned in the same sentence", "to": "financial protection", "width": 1.0}, {"from": "schemes", "title": "mentioned in the same sentence", "to": "various states", "width": 1.0}, {"from": "schemes", "title": "mentioned in the same sentence", "to": "results", "width": 1.0}, {"from": "schemes", "title": "mentioned in the same sentence", "to": "mixed", "width": 1.0}, {"from": "publicly funded purchasing", "title": "mentioned in the same sentence", "to": "services", "width": 1.0}, {"from": "private providers", "title": "mentioned in the same sentence", "to": "services", "width": 1.0}, {"from": "private health sector", "title": "mentioned in the same sentence", "to": "opportunities", "width": 1.0}, {"from": "private health sector", "title": "mentioned in the same sentence", "to": "unmet demand", "width": 1.0}, {"from": "private health sector", "title": "The private health sector is the major provider of health care in India", "to": "provider", "width": 1.0}, {"from": "private health sector", "title": "This sector remains largely unregulated", "to": "unregulated", "width": 1.0}, {"from": "private health sector", "title": "The private health sector is taking a lead in this area, with some centers enlisting a cognitive platform for the delivery of healthcare in oncology [49]", "to": "cognitive platform", "width": 1.0}, {"from": "private health sector", "title": "The aims, strategy, structure, and service provision by the public and the private health sector are different.", "to": "public health sector", "width": 1.0}, {"from": "preferred provider", "title": "mentioned in the same sentence", "to": "care", "width": 1.0}, {"from": "patients", "title": "mentioned in the same sentence", "to": "services", "width": 1.0}, {"from": "patients", "title": "A set percentage of patients from economically weaker off sections of society would receive care at little-to-no-cost.", "to": "economically weaker off sections of society", "width": 1.0}, {"from": "patients", "title": "Ensure reasonable costs to patients.", "to": "costs", "width": 1.0}, {"from": "trend", "title": "mentioned in the same sentence", "to": "medicalization", "width": 1.0}, {"from": "trend", "title": "mentioned in the same sentence", "to": "corporatization", "width": 1.0}, {"from": "private sector", "title": "mentioned in the same sentence", "to": "solo practitioners", "width": 1.0}, {"from": "private sector", "title": "mentioned in the same sentence", "to": "small nursing homes", "width": 1.0}, {"from": "private sector", "title": "mentioned in the same sentence", "to": "corporate houses", "width": 1.0}, {"from": "private sector", "title": "mentioned in the same sentence", "to": "urban areas", "width": 1.0}, {"from": "private sector", "title": "mentioned in the same sentence", "to": "tier ii and iii cities", "width": 1.0}, {"from": "private sector", "title": "The private sector has invested heavily in setting up medical colleges", "to": "setting up medical colleges", "width": 1.0}, {"from": "private sector", "title": "Their fees are high, as much as 100 times those of government colleges", "to": "government colleges", "width": 1.0}, {"from": "private sector", "title": "the private sector is the largest employer of doctors in India", "to": "doctors in india", "width": 1.0}, {"from": "private sector", "title": "The profit motive of the private sector forces mandatory advance payments.", "to": "mandatory advance payments", "width": 1.0}, {"from": "oop expenditure", "title": "mentioned in the same sentence", "to": "total health", "width": 1.0}, {"from": "oop expenditure", "title": "which accounted for 62% of total health expenditure (US$60.6 billion out of US$ 97.1 billion) in 2014 [31]", "to": "total health expenditure", "width": 1.0}, {"from": "tier ii and iii cities", "title": "is rapidly expanding to tier II and III cities", "to": "rapidly expanding", "width": 1.0}, {"from": "marked spike", "title": "There has been a marked spike in increased OOP expenditure, which accounted for 62% of total health expenditure (US$60.6 billion out of US$ 97.1 billion) in 2014 [31]", "to": "increased oop expenditure", "width": 1.0}, {"from": "2023", "title": "The year 2023 is mentioned in the context and is related to the authors Saxena et al.", "to": "saxena et al.", "width": 1.0}, {"from": "2023", "title": "Authors of the paper", "to": "saxena", "width": 1.0}, {"from": "2023", "title": "DOI", "to": "e40274", "width": 1.0}, {"from": "e40274", "title": "The article code e40274 is related to the Digital Object Identifier (DOI)", "to": "doi", "width": 1.0}, {"from": "doi", "title": "The Digital Object Identifier (DOI) is related to the specific DOI 10.7759/cureus.40274", "to": "10.7759/cureus.40274", "width": 1.0}, {"from": "doi", "title": "10.7759/cureus.402743 is the specific DOI for the article mentioned in the context", "to": "10.7759/cureus.402743", "width": 1.0}, {"from": "doctors graduating from private colleges", "title": "doctors graduating from these colleges are not attracted to the paltry remuneration offered by contractual government posts", "to": "contractual government posts", "width": 1.0}, {"from": "corporate sector", "title": "the corporate sector imposes performance targets and practice constraints on doctors\u0027 professional autonomy", "to": "doctors\u0027 professional autonomy", "width": 1.0}, {"from": "young and early career doctors", "title": "the majority of young and early career doctors face a simultaneous erosion of their status and opportunity", "to": "erosion of their status and opportunity", "width": 1.0}, {"from": "national medical council (nmc)", "title": "the aim of the NMC is to improve the regulation of health professionals", "to": "regulation of health professionals", "width": 1.0}, {"from": "nmc act", "title": "the NMC Act remains silent about the interplay between these sectors", "to": "private corporate sector, pharmaceutical industries, medical education, and healthcare services", "width": 1.0}, {"from": "medical education", "title": "clarity in the interplay between medical education and other reforms would ensure coordinated implementation of all inputs needed for universal health coverage", "to": "universal health coverage", "width": 1.0}, {"from": "medical education", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "health coverage", "width": 1.0}, {"from": "centralizing control of medical education", "title": "the current trend of centralizing control of medical education leaves little leeway for states to adopt medical education", "to": "states", "width": 1.0}, {"from": "centralizing control of medical education", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "health coverage", "width": 1.0}, {"from": "health coverage", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "states", "width": 1.0}, {"from": "health coverage", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "geographical", "width": 1.0}, {"from": "health coverage", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "cultural", "width": 1.0}, {"from": "health coverage", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "social", "width": 1.0}, {"from": "health coverage", "title": "The current trend of centralizing control of medical education leaves little leeway for states to adopt medical education to match the geographical, cultural, social, and economic diversity India represents [22].", "to": "economic diversity", "width": 1.0}, {"from": "health coverage", "title": "The total expenditure on health in India is 3.84% of its GDP [34].", "to": "expenditure on health in india", "width": 1.0}, {"from": "health coverage", "title": "Improve Efficiency The public health system is currently unable to utilize even the 1% of the GDP that has traditionally been available to it.", "to": "gdp", "width": 1.0}, {"from": "health coverage", "title": "Compare this to the US with close to 18% devoted to healthcare and one-quarter of the population.", "to": "us", "width": 1.0}, {"from": "health coverage", "title": "Compare this to the US with close to 18% devoted to healthcare and one-quarter of the population.", "to": "healthcare", "width": 1.0}, {"from": "health coverage", "title": "The Government of India has allocated about 1.29% of its budget to healthcare in spite of a stated commitment in the National Health Policy 2017 to increase the allocation to 2.5% by 2025.", "to": "government of india", "width": 1.0}, {"from": "health coverage", "title": "The Government of India has allocated about 1.29% of its budget to healthcare in spite of a stated commitment in the National Health Policy 2017 to increase the allocation to 2.5% by 2025.", "to": "national health policy 2017", "width": 1.0}, {"from": "health coverage", "title": "This year the Indian government doubled its allocation to just over $30 billion [36].", "to": "allocation", "width": 1.0}, {"from": "health coverage", "title": "The Government of India has allocated about 1.29% of its budget to healthcare in spite of a stated commitment in the National Health Policy 2017 to increase the allocation to 2.5% by 2025.", "to": "2025", "width": 1.0}, {"from": "health coverage", "title": "In contrast, the Domestic General Government Health Expenditure was US 8.6%, Brazil 4%, and China\u0027s 2.9% [35].", "to": "domestic general government health expenditure", "width": 1.0}, {"from": "health coverage", "title": "In contrast, the Domestic General Government Health Expenditure was US 8.6%, Brazil 4%, and China\u0027s 2.9% [35].", "to": "us 8.6%", "width": 1.0}, {"from": "health coverage", "title": "In contrast, the Domestic General Government Health Expenditure was US 8.6%, Brazil 4%, and China\u0027s 2.9% [35].", "to": "brazil 4%", "width": 1.0}, {"from": "health coverage", "title": "In contrast, the Domestic General Government Health Expenditure was US 8.6%, Brazil 4%, and China\u0027s 2.9% [35].", "to": "china\u0027s 2.9%", "width": 1.0}, {"from": "health coverage", "title": "This year the Indian government doubled its allocation to just over $30 billion [36].", "to": "indian government", "width": 1.0}, {"from": "health coverage", "title": "With just 1.29% traditionally coming from the government, the rest has come from OOP expenditures by consumers.", "to": "oop expenditures", "width": 1.0}, {"from": "health coverage", "title": "With just 1.29% traditionally coming from the government, the rest has come from OOP expenditures by consumers.", "to": "consumers", "width": 1.0}, {"from": "health coverage", "title": "This has resulted in many families falling into poverty every year paying for healthcare they can ill afford.", "to": "poverty", "width": 1.0}, {"from": "health coverage", "title": "The Government must increase its share of expenditure to put it further in line with other middle-income countries and its neighbors.", "to": "government", "width": 1.0}, {"from": "health coverage", "title": "The Government must increase its share of expenditure to put it further in line with other middle-income countries and its neighbors.", "to": "expenditure", "width": 1.0}, {"from": "health coverage", "title": "Improve Efficiency The public health system is currently unable to utilize even the 1% of the GDP that has traditionally been available to it.", "to": "efficiency", "width": 1.0}, {"from": "health coverage", "title": "Improve Efficiency The public health system is currently unable to utilize even the 1% of the GDP that has traditionally been available to it.", "to": "public health system", "width": 1.0}, {"from": "health coverage", "title": "With a doubling of the federal government\u2019s allocation in 2022, its capacity to do so must be increased.", "to": "federal government\u0027s allocation", "width": 1.0}, {"from": "health coverage", "title": "With a doubling of the federal government\u2019s allocation in 2022, its capacity to do so must be increased.", "to": "2022", "width": 1.0}, {"from": "health coverage", "title": "With a doubling of the federal government\u2019s allocation in 2022, its capacity to do so must be increased.", "to": "capacity", "width": 1.0}, {"from": "federal government", "title": "the federal government\u0027s allocation in 2022", "to": "allocation", "width": 1.0}, {"from": "allocation", "title": "its capacity to do so must be increased", "to": "capacity", "width": 1.0}, {"from": "allocation", "title": "Increasing the financial allocation and its utilization capacity will enhance the health infrastructure", "to": "health infrastructure", "width": 1.0}, {"from": "allocation", "title": "Increasing the financial allocation and its utilization capacity will enhance the workforce capability", "to": "workforce capability", "width": 1.0}, {"from": "institutional capacity building", "title": "This requires institutional capacity building and competency-based training in the government healthcare system", "to": "competency-based training", "width": 1.0}, {"from": "government healthcare system", "title": "This will allow the country to align its health services to local priorities", "to": "country", "width": 1.0}, {"from": "national health protection mission", "title": "The recently started National Health Protection Mission has limited uptake", "to": "uptake", "width": 1.0}, {"from": "indians", "title": "The majority of Indians (up to 80.9% in urban and 85.9% in rural) still do not have health insurance", "to": "health insurance", "width": 1.0}, {"from": "public health sector", "title": "The public health sector has revised standards for healthcare infrastructure, personnel, equipment and services for primary, secondary and tertiary care", "to": "standards", "width": 1.0}, {"from": "public health sector", "title": "The recommendations made here are an effort to synergize the services of the public and private health sectors for maximizing efficiencies at scale.", "to": "synergize services", "width": 1.0}, {"from": "health facilities", "title": "They need to be utilized to accredit health facilities in order to achieve standardization of the health system", "to": "standardization", "width": 1.0}, {"from": "corporate hospitals", "title": "For example, these state-of-the-art corporate hospitals were allocated land in prime", "to": "land", "width": 1.0}, {"from": "limited rules", "title": "The limited rules that exist are rarely enforced.", "to": "enforced", "width": 1.0}, {"from": "state-of-the-art corporate hospitals", "title": "These state-of-the-art corporate hospitals were allocated land in prime urban locations.", "to": "allocated land", "width": 1.0}, {"from": "government", "title": "The government could take steps to ensure the existing rules are implemented, and create and enforce new ones.", "to": "rules", "width": 1.0}, {"from": "government", "title": "Market-driven forces cannot be trusted to meet the needs of an entire nation. Government must step in and direct the effort", "to": "market-driven forces", "width": 1.0}, {"from": "profit margins", "title": "Cap the profit margins of the hospitals.", "to": "hospitals", "width": 1.0}, {"from": "health insurance scheme", "title": "The health insurance scheme for central government employees in India purchases services from the private sector.", "to": "central government employees", "width": 1.0}, {"from": "model", "title": "This model can be expanded to scale for the population using the newly launched national health insurance scheme (Ayushman Bharat).", "to": "national health insurance scheme", "width": 1.0}, {"from": "digital technology", "title": "Digital technology is being used to facilitate the vaccination program.", "to": "vaccination program", "width": 1.0}, {"from": "track and trace system", "title": "A digital track and trace system, named eVin, has been developed to track vaccine availability and facilitate cold chain maintenance for its national immunization program.", "to": "evin", "width": 1.0}, {"from": "training management information systems", "title": "Medical devices, mobile health apps, and wearable, trackable technology have all enhanced opportunities for personalized care.", "to": "new personnel", "width": 1.0}, {"from": "policy formulation", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "medical devices", "width": 1.0}, {"from": "policy formulation", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "mobile health apps", "width": 1.0}, {"from": "policy formulation", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "wearable, trackable technology", "width": 1.0}, {"from": "medical devices", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "mobile health apps", "width": 1.0}, {"from": "medical devices", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "wearable, trackable technology", "width": 1.0}, {"from": "mobile health apps", "title": "enhanced opportunities for personalized care, self-management, behavior modification and tele-monitoring of patients", "to": "wearable, trackable technology", "width": 1.0}, {"from": "high-income countries", "title": "innovations in digital technology are supporting the delivery of vital healthcare", "to": "technology", "width": 1.0}, {"from": "covid-19 pandemic", "title": "catalyzed the pace and scale of this process and enabled the", "to": "pace and scale of this process", "width": 1.0}, {"from": "delivery of healthcare", "title": "delivery of healthcare to populations who would have been denied such care otherwise", "to": "populations", "width": 1.0}, {"from": "telemedicine", "title": "The uptake of telemedicine for consultations with healthcare providers increased 50 to 175 times in the US during the COVID-19 pandemic [45]", "to": "consultations", "width": 1.0}, {"from": "telemedicine", "title": "Telemedicine can amplify the reach of care, thereby helping decrease maternal and child mortality, which are", "to": "care", "width": 1.0}, {"from": "telemedicine", "title": "Telemedicine can amplify the reach of care", "to": "reach of care", "width": 1.0}, {"from": "telemedicine", "title": "Telemedicine can help decrease maternal and child mortality", "to": "decrease maternal and child mortality", "width": 1.0}, {"from": "medical examination", "title": "The scope of medical examination and procedures has expanded markedly during this pandemic", "to": "procedures", "width": 1.0}, {"from": "ai-embedded logarithms", "title": "AI-embedded logarithms now diagnose COVID-19 disease from chest x-rays and CT scans", "to": "covid-19 disease", "width": 1.0}, {"from": "remote orthopedic examinations", "title": "Standards for conducting remote orthopedic examinations are now used successfully", "to": "standards", "width": 1.0}, {"from": "drones", "title": "Drones are being used to deliver medicines to communities [46]", "to": "medicines", "width": 1.0}, {"from": "protective equipment", "title": "A shortage of protective equipment during the pandemic was overcome by manufacturing it locally using 3D printing [47]", "to": "manufacturing", "width": 1.0}, {"from": "internet density", "title": "India has an internet density of 25.3% for its rural areas where 66% of its population resides and an internet density of 97.9% where 34% of its population lives [48]", "to": "rural areas", "width": 1.0}, {"from": "digital technologies", "title": "The use of digital technologies at scale can aid in the control of risk factors for non-communicable diseases such as smoking, alcohol abuse, physical inactivity, and unhealthy diet", "to": "control of risk factors for non-communicable diseases", "width": 1.0}, {"from": "digital literacy", "title": "Increasing digital literacy can aid delivery and monitoring of care for the elderly", "to": "delivery and monitoring of care for the elderly", "width": 1.0}, {"from": "digital literacy", "title": "Increasing digital literacy can ensure privacy in accessing care for those with mental health issues", "to": "privacy in accessing care for those with mental health issues", "width": 1.0}, {"from": "digital literacy", "title": "Increasing digital literacy can help overcome the stigma associated with mental health in the country", "to": "stigma associated with mental health", "width": 1.0}, {"from": "central government", "title": "The central government needs to assert leadership in the fight for better health for all Indians", "to": "leadership in the fight for better health for all indians", "width": 1.0}, {"from": "data", "title": "Having accurate data about the quantity and geospatial location of its manpower will increase the efficiency and effectiveness of its utilization", "to": "quantity and geospatial location of its manpower", "width": 1.0}, {"from": "training schedules", "title": "Lack of transparency in creating training schedules, coupled with the erratic posting of personnel", "to": "erratic posting of personnel", "width": 1.0}, {"from": "training schedules", "title": "Lack of transparency in creating training schedules", "to": "transparency", "width": 1.0}, {"from": "training schedules", "title": "creating training schedules, coupled with the erratic posting of personnel", "to": "personnel", "width": 1.0}, {"from": "transparency", "title": "Focus on transparency, training and retaining health personnel, strengthening health infrastructure, implementing uniform standards.", "to": "health infrastructure", "width": 1.0}, {"from": "transparency", "title": "Both transparency and training are key terms mentioned in the context.", "to": "training", "width": 1.0}, {"from": "transparency", "title": "Both transparency and retaining health personnel are key terms mentioned in the context.", "to": "retaining health personnel", "width": 1.0}, {"from": "transparency", "title": "Both transparency and strengthening health infrastructure are key terms mentioned in the context.", "to": "strengthening health infrastructure", "width": 1.0}, {"from": "transparency", "title": "Both transparency and implementing uniform standards are key terms mentioned in the context.", "to": "implementing uniform standards", "width": 1.0}, {"from": "transparency", "title": "Both transparency and broad overarching policy are key terms mentioned in the context.", "to": "broad overarching policy", "width": 1.0}, {"from": "personnel", "title": "same personnel staying at district or state headquarters", "to": "district or state headquarters", "width": 1.0}, {"from": "personnel", "title": "personnel retention and ensure personnel motivation", "to": "retention", "width": 1.0}, {"from": "living conditions", "title": "living conditions are generally better than in the underserved regions", "to": "underserved regions", "width": 1.0}, {"from": "online training", "title": "Online training can help overcome this challenge", "to": "challenge", "width": 1.0}, {"from": "training", "title": "It must require investment in the necessary infrastructure to do so", "to": "investment", "width": 1.0}, {"from": "training", "title": "upgrading the skills of nurses", "to": "skills", "width": 1.0}, {"from": "training", "title": "training received positive evaluations from participants", "to": "evaluations", "width": 1.0}, {"from": "training", "title": "few implemented what was learned due to deeper structural problems", "to": "implementation", "width": 1.0}, {"from": "training", "title": "Both training and retaining health personnel are key terms mentioned in the context.", "to": "retaining health personnel", "width": 1.0}, {"from": "training", "title": "Both training and strengthening health infrastructure are key terms mentioned in the context.", "to": "strengthening health infrastructure", "width": 1.0}, {"from": "training", "title": "Both training and implementing uniform standards are key terms mentioned in the context.", "to": "implementing uniform standards", "width": 1.0}, {"from": "training", "title": "Both training and broad overarching policy are key terms mentioned in the context.", "to": "broad overarching policy", "width": 1.0}, {"from": "faculty", "title": "faculty from the University of Nottingham in India", "to": "university of nottingham", "width": 1.0}, {"from": "violence", "title": "Increasing violence against healthcare personnel", "to": "healthcare personnel", "width": 1.0}, {"from": "physician-to-patient ratio", "title": "low physician-to-patient ratio not only results in delays in attending patients", "to": "delays", "width": 1.0}, {"from": "physicians", "title": "Underpaid physicians are tempted to take on more patients than they can reasonably serve", "to": "patient overload", "width": 1.0}, {"from": "physicians", "title": "Defensive medicine practices set in", "to": "defensive medicine practices", "width": 1.0}, {"from": "physicians", "title": "Overwhelmed physicians protect themselves", "to": "overwhelmed", "width": 1.0}, {"from": "patient", "title": "Physicians protect themselves by ordering unnecessary tests and procedures to take on more patients than they can reasonably serve. Physicians, seen as authorities, are in direct contact with their patients and tend to bear the brunt of agitated and frustrated patients and their families.", "to": "physician", "width": 1.0}, {"from": "physician", "title": "Dissatisfied patients may strike out at a system that is failing them. Physicians, seen as authorities, are in direct contact with their patients and tend to bear the brunt of agitated and frustrated patients and their families.", "to": "system", "width": 1.0}, {"from": "pharmaceutical companies", "title": "Unethical practices by pharmaceutical companies.", "to": "unethical practices", "width": 1.0}, {"from": "providers", "title": "Tempting providers to refer unnecessarily and prescribe treatments that may not be needed to assure patients that their concerns are being addressed.", "to": "tempting providers", "width": 1.0}, {"from": "primary care physicians", "title": "Until and unless physicians, particularly primary care physicians, are adequately compensated, this trend is likely to continue with the consequences noted earlier.", "to": "adequate compensation", "width": 1.0}, {"from": "private marketplace", "title": "The private marketplace will not be able to solve this. Only a thoughtful approach to government planning can reverse the situation.", "to": "thoughtful approach to government planning", "width": 1.0}, {"from": "retaining health personnel", "title": "Both retaining health personnel and strengthening health infrastructure are key terms mentioned in the context.", "to": "strengthening health infrastructure", "width": 1.0}, {"from": "retaining health personnel", "title": "Both retaining health personnel and implementing uniform standards are key terms mentioned in the context.", "to": "implementing uniform standards", "width": 1.0}, {"from": "retaining health personnel", "title": "Both retaining health personnel and broad overarching policy are key terms mentioned in the context.", "to": "broad overarching policy", "width": 1.0}, {"from": "strengthening health infrastructure", "title": "Both strengthening health infrastructure and implementing uniform standards are key terms mentioned in the context.", "to": "implementing uniform standards", "width": 1.0}, {"from": "strengthening health infrastructure", "title": "Both strengthening health infrastructure and broad overarching policy are key terms mentioned in the context.", "to": "broad overarching policy", "width": 1.0}, {"from": "implementing uniform standards", "title": "Both implementing uniform standards and broad overarching policy are key terms mentioned in the context.", "to": "broad overarching policy", "width": 1.0}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 5.05,
+            "damping": 0.09,
+            "gravitationalConstant": -18100,
+            "springConstant": 0.001,
+            "springLength": 380
+        },
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.015,
+            "damping": 0.4,
+            "gravitationalConstant": -31,
+            "springConstant": 0.08,
+            "springLength": 100
+        },
+        "repulsion": {
+            "centralGravity": 0.2,
+            "damping": 0.09,
+            "nodeDistance": 150,
+            "springConstant": 0.05,
+            "springLength": 400
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

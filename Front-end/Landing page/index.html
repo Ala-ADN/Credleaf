@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Landing Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .logo-container {
+        margin-bottom: 60px;
+      }
+      .logo {
+        width: 400px;
+        height: auto;
+      }
+      .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 800px;
+      }
+      input {
+        flex-grow: 1;
+        padding: 18px 20px;
+        font-size: 18px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        width: 550px;
+        height: 30px;
+      }
+      button {
+        padding: 18px 24px;
+        font-size: 18px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        height: 68px;
+      }
+      button:hover {
+        background-color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo-container">
+      <img src="logo.svg" alt="Credleaf Logo" class="logo" />
+    </div>
+
+    <div class="form-container">
+      <form id="mainForm" action="time-series.html">
+        <input
+          type="text"
+          id="mainInput"
+          placeholder="Enter your URL here..."
+          required
+        />
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+
+    <script>
+      // Form submission handler
+      document
+        .getElementById("mainForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const inputValue = document.getElementById("mainInput").value;
+
+          // You can do something with the input value here if needed
+          console.log("Input value:", inputValue);
+
+          // Redirect to time-series.html
+          window.location.href = "../Time series/time-series.html";
+        });
+    </script>
+  </body>
+</html>
