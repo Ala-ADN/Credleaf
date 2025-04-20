@@ -1,120 +1,131 @@
 # Credleaf
 
-Credleaf is a web-based platform for data visualization and fact-checking, focused on analyzing and displaying healthcare and vaccine-related information through interactive network graphs, time series visualizations, and fact checking capabilities.
+<div align="center">
+  <img src="Front-end/Landing%20page/logo.svg" alt="Credleaf Logo" width="400"/>
+  <br>
+  <br>
+  
+  [![Status](https://img.shields.io/badge/status-active-success.svg)]()
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
+  [![Made with Python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+  [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+  [![Last Updated](https://img.shields.io/badge/Last%20Updated-April%202025-brightgreen.svg)]()
+  
+</div>
 
-## Project Overview
+## 📋 Table of Contents
 
-Credleaf consists of four main components:
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Architecture](#-architecture)
+- [Technology Stack](#-technology-stack)
+- [Installation & Setup](#-installation--setup)
+- [API Documentation](#-api-documentation)
+- [Project Structure](#-project-structure)
+- [Development Guidelines](#-development-guidelines)
+- [License](#-license)
 
-1. **Landing Page**: Entry point where users can enter URLs for analysis
-2. **Time Series Visualization**: Displays temporal data related to vaccine publications with interactive charts
-3. **Network Graph Visualization**: Shows relationships between concepts using interactive node-based networks
-4. **Fact-Checking API**: Aggregates trust scores from multiple fact-checking services and advanced analysis parameters
+## 🔍 Overview
 
-## Technologies Used
+Credleaf is a comprehensive web-based platform for data visualization and fact-checking, specifically designed for analyzing healthcare and vaccine-related information. The platform employs interactive network graphs, time series visualizations, and advanced fact-checking algorithms to provide users with reliable insights into complex healthcare data.
 
-### Front-end
+The system integrates multiple fact-checking services and employs sophisticated analysis techniques including temporal pattern recognition, semantic alignment evaluation, and graph structure analysis to deliver trustworthy information assessment.
 
-- **[vis.js](https://visjs.github.io/vis-network/)**: Network visualization library for creating interactive graph networks
-- **[Chart.js](https://www.chartjs.org/)**: Library for creating interactive charts and graphs in the time series visualization
-- **[Tom Select](https://tom-select.js.org/)**: Enhanced select element for better user experience in node selection
+## ✨ Key Features
 
-### Back-end
+### 🔍 Fact-Checking API
 
-- **[Python](https://www.python.org/)**: Core programming language for the back-end
-- **[Flask](https://flask.palletsprojects.com/)**: Web framework for the fact-checking API
-- **[NetworkX](https://networkx.org/)**: Python library for creation and manipulation of graph networks
-- **[Ollama Embeddings](https://ollama.com/)**: Advanced embedding technology for semantic search and data representation
-- **[Requests](https://docs.python-requests.org/)**: HTTP library for making calls to external fact-checking APIs
-
-## Project Structure
-
-```
-ReadMe.md
-Back-end/
-    api.py                  # Flask API for fact-checking
-    Graph/
-        generate_graph.py   # Python script for graph generation
-Front-end/
-    Graph network/
-        graph-data.js          # Data management for graph visualization
-        graph-filter.js        # Filtering functionality for graph nodes
-        graph-highlight.js     # Highlighting functionality for graph nodes
-        graph-init.js          # Graph initialization logic
-        graph.html             # Vaccine sentiment network visualization
-        index_graph.html       # Alternative graph network entry point
-        index.html             # Main network graph page
-        large network.html     # Extended network visualization
-        styles.css             # Styling for graph visualizations
-    Landing page/
-        index.html             # Main landing page
-        logo.svg               # Credleaf logo
-        redirect-page.html     # Post-submission redirect
-    Time series/
-        time-series.html       # Time series visualization of vaccine publication data
-```
-
-## Features
-
-- **Fact-Checking API** with:
-
-  - Integration with multiple fact-checking services (Google Fact Check, PolitiFact, OpenAI)
-  - Aggregated trust scores based on multiple factors
+- Integration with multiple authoritative fact-checking services (Google Fact Check, PolitiFact, OpenAI)
+- Aggregated trust scores based on comprehensive analysis
+- Advanced analysis components:
   - Temporal pattern analysis
   - Semantic alignment evaluation
   - Graph structure analysis
-  - Customizable parameter weights
+  - Customizable parameter weights for personalized assessment
 
-- **Interactive network graph visualization** with:
+### 🕸️ Interactive Network Graph Visualization
 
-  - Node highlighting
-  - Neighborhood exploration
-  - Filtering capabilities
-  - Search functionality
-  - Detailed tooltips
-  - Physics-based layout with stabilization
+- Dynamic node highlighting for focus areas
+- Neighborhood exploration to understand relationships
+- Advanced filtering capabilities
+- Intuitive search functionality
+- Detailed tooltips for information at a glance
+- Physics-based layout with stabilization for optimal viewing
 
-- **Time series visualization** with:
+### 📊 Time Series Visualization
 
-  - Interactive charts
-  - Hover functionality
-  - Data highlighting
-  - Custom legend
+- Interactive charts for temporal data analysis
+- Responsive hover functionality
+- Contextual data highlighting
+- Custom legend for clear data interpretation
 
-- **Landing page** with:
-  - URL submission for analysis
-  - Redirect to visualization pages
+### 🖥️ User Interface
 
-## Setup Instructions
+- Clean, intuitive landing page
+- URL submission for immediate analysis
+- Streamlined navigation between visualization components
 
-### Installation
+## 🏛️ Architecture
+
+Credleaf consists of four main components:
+
+1. **Landing Page**: The entry point where users can submit URLs for analysis
+2. **Time Series Visualization**: Displays temporal data related to vaccine publications with interactive charts
+3. **Network Graph Visualization**: Shows relationships between concepts using interactive node-based networks
+4. **Fact-Checking API**: Backend service that aggregates trust scores and provides comprehensive analysis
+
+## 🛠️ Technology Stack
+
+### Frontend Technologies
+
+- **[vis.js](https://visjs.github.io/vis-network/)**: Network visualization library for interactive graph networks
+- **[Chart.js](https://www.chartjs.org/)**: Library for responsive interactive charts and graphs
+- **[Tom Select](https://tom-select.js.org/)**: Enhanced select elements for improved user experience
+
+### Backend Technologies
+
+- **[Python](https://www.python.org/)**: Core programming language
+- **[Flask](https://flask.palletsprojects.com/)**: Web framework for the API
+- **[NetworkX](https://networkx.org/)**: Python library for graph network operations
+- **[Ollama Embeddings](https://ollama.com/)**: Advanced embedding technology for semantic search
+- **[Requests](https://docs.python-requests.org/)**: HTTP library for external API integration
+
+## 🚀 Installation & Setup
+
+### Prerequisites
+
+- Python 3.8+
+- Node.js 14+ (for development tools)
+- Git
+
+### Step-by-Step Installation
 
 1. **Clone the repository**
 
-   ```
+   ```bash
    git clone <repository-url>
    cd Credleaf
    ```
 
 2. **Install Python dependencies**
 
-   ```
+   ```bash
    pip install flask requests pandas numpy networkx matplotlib
    ```
 
 3. **Set up Ollama Embeddings**
 
-   - Install the Ollama CLI by following the instructions on the [Ollama website](https://ollama.com/).
-   - Configure your embeddings by running:
-     ```
+   - Install the Ollama CLI from the [Ollama website](https://ollama.com/)
+   - Configure your embeddings:
+     ```bash
      ollama configure --api-key <your-api-key>
      ```
-   - Ensure the Ollama service is running locally or accessible via the configured API endpoint.
+   - Ensure the Ollama service is running locally or accessible via the configured API endpoint
 
 4. **Configure fact-checking API keys**
 
    - Open `Back-end/api.py`
-   - Replace placeholder API keys in the `FACT_CHECK_APIS` dictionary with your actual API keys:
+   - Update the API keys:
      ```python
      FACT_CHECK_APIS = {
          "google_factcheck": {
@@ -131,47 +142,42 @@ Front-end/
 
 5. **Start the Flask API**
 
-   ```
+   ```bash
    cd Back-end
    python api.py
    ```
 
 6. **Set up the web server**
 
-   - Configure your web server to serve the Front-end directory
-   - For local development, you can use Python's built-in HTTP server:
-     ```
-     cd Front-end
-     python -m http.server 8000
-     ```
+   For local development, use Python's built-in HTTP server:
+
+   ```bash
+   cd Front-end
+   python -m http.server 8000
+   ```
 
 7. **Access the application**
-   - Open your web browser and navigate to:
-     ```
-     http://localhost:8000/Landing%20page/index.html
-     ```
-
-### Running Graph Generation
-
-To generate new graph data from your datasets:
-
-1. Navigate to the Back-end/Graph directory
-
    ```
-   cd Back-end/Graph
+   http://localhost:8000/Landing%20page/index.html
    ```
 
-2. Run the graph generation script with your input directory:
-   ```
-   python generate_graph.py --input <path-to-data> --output <output-path>
-   ```
+### Graph Data Generation
 
-## Using the Fact-Checking API
+To generate new graph data:
+
+```bash
+cd Back-end/Graph
+python generate_graph.py --input <path-to-data> --output <output-path>
+```
+
+## 📚 API Documentation
 
 ### Endpoints
 
-- **POST /factcheck**: Submit a claim for fact-checking
-- **GET /health**: Check the API status and available fact-checking services
+| Endpoint     | Method | Description                               |
+| ------------ | ------ | ----------------------------------------- |
+| `/factcheck` | POST   | Submit a claim for fact-checking analysis |
+| `/health`    | GET    | Check API status and available services   |
 
 ### Example Request
 
@@ -230,13 +236,58 @@ Content-Type: application/json
 }
 ```
 
-## Development Notes
+## 📁 Project Structure
 
-When developing new features:
+```
+ReadMe.md
+Back-end/
+    api.py                  # Flask API for fact-checking
+    Graph/
+        generate_graph.py   # Python script for graph generation
+Front-end/
+    Graph network/
+        graph-data.js       # Data management for graph visualization
+        graph-filter.js     # Filtering functionality for graph nodes
+        graph-highlight.js  # Highlighting functionality for graph nodes
+        graph-init.js       # Graph initialization logic
+        graph.html          # Vaccine sentiment network visualization
+        index_graph.html    # Alternative graph network entry point
+        index.html          # Main network graph page
+        large network.html  # Extended network visualization
+        styles.css          # Styling for graph visualizations
+    Landing page/
+        index.html          # Main landing page
+        logo.svg            # Credleaf logo
+        redirect-page.html  # Post-submission redirect
+    Time series/
+        time-series.html    # Time series visualization of vaccine publication data
+```
 
-1. Graph data is defined in `graph-data.js` and includes nodes, edges, and their properties
-2. Time series data is embedded directly in `time-series.html`
-3. Event handling for node selection and highlighting is managed in `graph-highlight.js`
-4. Filtering functionality is in `graph-filter.js`
-5. Graph initialization and configuration is in `graph-init.js`
-6. Fact-checking API logic is contained in `api.py`
+## 💻 Development Guidelines
+
+When contributing to the Credleaf project, please follow these guidelines:
+
+1. **Graph Data Management**: All graph data is defined in `graph-data.js` including nodes, edges, and properties
+2. **Time Series Data**: Time series data is embedded directly in `time-series.html`
+3. **Event Handling**: Node selection and highlighting is managed in `graph-highlight.js`
+4. **Filtering Logic**: All filtering functionality is contained in `graph-filter.js`
+5. **Graph Configuration**: All initialization and configuration is in `graph-init.js`
+6. **API Development**: Fact-checking API logic is contained in `api.py`
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by the Credleaf Team</sub>
+</div>
