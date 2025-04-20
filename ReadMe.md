@@ -1,15 +1,17 @@
 # Credleaf
 
 <div align="center">
-  <img src="Front-end/Landing%20page/logo.svg" alt="Credleaf Logo" width="400"/>
-  <br>
-  <br>
-  
-  [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-  [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
-  [![Made with Python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-  [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-  [![Last Updated](https://img.shields.io/badge/Last%20Updated-April%202025-brightgreen.svg)]()
+<div style="background-color: white; padding: 20px; border-radius: 8px;">
+    <img src="Front-end/Landing%20page/logo.svg" alt="Credleaf Logo" width="400"/>
+    <br>
+    <br>
+    
+    [![Status](https://img.shields.io/badge/status-active-success.svg)]()
+    [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
+    [![Made with Python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+    [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+    [![Last Updated](https://img.shields.io/badge/Last%20Updated-April%202025-brightgreen.svg)]()
+</div>
   
 </div>
 
@@ -27,7 +29,7 @@
 
 ## 🔍 Overview
 
-Credleaf is a comprehensive web-based platform for data visualization and fact-checking, specifically designed for analyzing healthcare and vaccine-related information. The platform employs interactive network graphs, time series visualizations, and advanced fact-checking algorithms to provide users with reliable insights into complex healthcare data.
+Credleaf is a comprehensive web-based osint tool for fact-checking and data visualization, specifically designed for analyzing healthcare and vaccine-related information. The platform employs interactive network graphs, time series visualizations, and advanced fact-checking algorithms to provide users with reliable insights into complex healthcare data.
 
 The system integrates multiple fact-checking services and employs sophisticated analysis techniques including temporal pattern recognition, semantic alignment evaluation, and graph structure analysis to deliver trustworthy information assessment.
 
